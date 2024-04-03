@@ -1,0 +1,22 @@
+
+#include <stdio.h>
+#include <stdlib.h>
+#define NumeroAlumnos 35
+// Ejercicios resueltos programacion C aprenderaprogramar.com
+int main() {
+    double nota[NumeroAlumnos]; //35 elementos numerados de 0 a 34
+    double sumatorio = 0;     double media = 0;     
+    int i=0;
+    puts ("Programa Calcular Notas Medias \n");
+    //Extracción de datos de archivo
+    FILE* fichero;
+    fichero = fopen("c:\\notas.dat", "rt");
+    for (i=0; i<=NumeroAlumnos-1; i++) {
+        fscanf (fichero, "%lf", &nota[i] );
+        sumatorio = sumatorio + nota[i];
+    }
+    fclose(fichero);
+    media = sumatorio / NumeroAlumnos;
+    printf ("La nota media de la clase es %lf \n", media);
+    return 0;
+}
