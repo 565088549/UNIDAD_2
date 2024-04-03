@@ -1,0 +1,21 @@
+
+#include <stdio.h>
+#include <stdlib.h>
+
+int main() {
+    int i=0;
+    double actual=0;
+    double nuevo=0;
+    double inf [6]; //Inflacion con indices de 0 a 5
+    puts ("Programa precios de planta\n");
+    printf ("Introduzca el precio actual: ");
+    scanf ("%lf", &actual);
+    nuevo = actual;
+    for (i=0; i<6; i++) {
+        printf ("Introduzca la inflacion del mes %d: " , i+1);
+        scanf ("%lf", &inf[i]);
+        nuevo = nuevo * (1 + inf[i]/100);
+    }
+    printf("\nEl precio nuevo del producto debe ser: %lf ", nuevo);
+    return 0; //Ejercicios resueltos aprenderaprogramar.com
+}
