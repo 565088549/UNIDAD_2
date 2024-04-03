@@ -1,0 +1,15 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+int main() {
+    int existencias; int entregadas;
+    puts ("Programa control de vacunas\n");
+    existencias = 1000;
+    while (existencias >=200) {
+        printf ("Introduzca el numero de unidades entregadas: ");
+        scanf ("%d", &entregadas);
+        existencias = existencias - entregadas;
+    } // Ejercicios resueltos programacion C aprenderaprogramar.com
+    puts("\nAviso. El inventario ha bajado de 200 uds. Debe comunicarlo.");
+    return 0;
+}
