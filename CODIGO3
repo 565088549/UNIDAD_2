@@ -1,0 +1,27 @@
+#include <stdio.h>
+#include <stdlib.h>
+// Ejercicios resueltos programacion C aprenderaprogramar.com
+int main() {
+    int i = 0; int j = 0; int capacidad = 0;
+    int pesoSaca = 0; int cargado = 0;
+    puts ("Programa distribucion de cal");
+    for  (i =1; i<=20; i++) {
+        printf ("Introduzca la capacidad del camion numero %d en kgs: ", i);
+        scanf ("%d", &capacidad);
+        while (cargado + pesoSaca <= capacidad) {
+            if (pesoSaca >0) {
+                printf ("Cargue la saca numero %d \n", j);
+                cargado = cargado + pesoSaca;
+            }
+            j = j+1;
+            printf ("Introduzca el peso de la saca numero %d en kgs: ", j);
+            scanf ("%d", &pesoSaca);
+        } //Cierre del while
+        if (i<20) {
+            printf ("No cargue todavía. Despache el camion numero %d y ponga a cargar el camion numero %d \n", i, i+1);
+            cargado = 0;
+        }
+    } //Cierre del for
+    printf ("No cargue esta saca. Despache el camion numero %d. FINALIZADA LA CARGA DEL DIA" , i-1 );
+    return 0;
+}
