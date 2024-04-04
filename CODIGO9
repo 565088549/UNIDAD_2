@@ -1,0 +1,165 @@
+#include <stdio.h>
+#include <string.h>
+/* Definicion de las constantes del programa */
+#define TAM 30
+#define TAM_BUFFER 10
+/* Definicion de los codigos de error */
+#define OK 0
+#define ERROR 1
+/* Definicion de las estructuras de datos del programa */
+struct FICHA
+{
+ unsigned long dni;
+ char nombre[TAM];
+ char apellido[2][TAM];
+};
+/* Rutina que muestra un menu en pantalla.
+Parametros: Ninguno.
+Return: char Opcion elegida. */
+char Menu(void)
+{
+ register char d;
+ printf("\nElige una opcion:\n");
+ printf("\t0 -- Salir del programa.\n");
+ printf("\t1 -- Insertar un nuevo elemento.\n");
+ printf("\t2 -- Buscar un elemento por su dni.\n");
+ printf("\t3 -- Buscar un elemento por su apellido.\n");
+ while ((d=getchar())<'0' || d>'3');
+ return d;
+}
+/* Rutina que muestra un elemento en pantalla.
+Parametros: struct FICHA *ficha Puntero a la estructura con los datos
+a mostrar.
+Return: Ninguno. */
+void Mostrar(const struct FICHA *ficha)
+{
+ printf("\n\nDNI: %lu\n",ficha->dni);
+ printf("NOMBRE: %s\n",ficha->nombre);
+ printf("PRIMER APELLIDO: %s\n",ficha->apellido[0]);
+ printf("SEGUNDO APELLIDO: %s\n",ficha->apellido[1]);
+ printf("\nPulsa Enter para continuar\n");
+ getchar();
+}
+/* Rutina que busca un elemento dado su dni.
+Parametros: FILE *fichero Puntero al fichero de trabajo.
+ unsigned long dni Numero de dni a buscar.
+ char opcion Opcion de ejecucion, 1 mostrar, 0 no mostrar.
+Return: int Codigo de error. */
+int BuscarDni(FILE *fichero,const unsigned long dni,const char opcion)
+{
+struct FICHA ficha;
+ fseek(fichero,0L,SEEK_SET);
+ while (fread(&ficha,sizeof(struct FICHA),1,fichero)==1)
+ if (dni==ficha.dni)
+ {
+ if (opcion)
+ Mostrar(&ficha);
+ Return OK;
+ }
+ return ERROR;
+}
+/* Rutina que busca por apellidos.
+Parametros: FILE *fichero Puntero al fichero de trabajo.
+ char *apellido Apellido a buscar.
+Return: int Codigo de error.*/
+int BuscarApellido(FILE *fichero,char *apellido)
+{
+ struct FICHA ficha;
+ char encontrado=0;
+ fseek(fichero,0L,SEEK_SET);
+ while (fread(&ficha,sizeof(struct FICHA),1,fichero)==1)
+ if (!strcmp(apellido,ficha.apellido[0]) ||
+ !strcmp(apellido,ficha.apellido[1]))
+ {
+ Mostrar(&ficha);
+ encontrado=1;
+ }
+ return (encontrado) ? OK : ERROR;
+}
+/* Rutina que inserta un nuevo elemento en el fichero.
+Parametros: FILE *fichero Puntero al fichero de trabajo.
+ struct FICHA *ficha Puntero a la ficha a insertar.
+Return: int Codigo de error. */
+int Insertar(FILE *fichero,const struct FICHA *ficha)
+{
+ if (BuscarDni(fichero,ficha->dni,0)!=ERROR)
+ return ERROR;
+ fseek(fichero,0L,SEEK_END);
+ fwrite(ficha,sizeof(struct FICHA),1,fichero);
+ return OK;
+}
+/* Rutina que pide los datos de una ficha.
+Parametros: struct FICHA *ficha Puntero a la ficha que contendra los
+datos.
+ char opcion Opcion de ejecucion (0..2).
+Return: struct FICHA * Puntero a la ficha que contiene los datos. */
+struct FICHA *PedirDatos(struct FICHA *ficha,
+const char opcion)
+{
+ switch(opcion)
+ {
+ case 0: printf("\nDNI: ");
+ scanf("%lu",&ficha->dni);
+ fflush(stdin);
+ break;
+ case 1: fflush(stdin);
+ printf("APELLIDO: ");
+ strupr(gets(ficha->apellido[1]));
+ break;
+ case 2: printf("\nDNI: ");
+ scanf("%lu",&ficha->dni);
+ fflush(stdin);
+ printf("NOMBRE: ");
+ strupr(gets(ficha->nombre));
+ printf("PRIMER APELLIDO: ");
+ strupr(gets(ficha->apellido[0]));
+ printf("SEGUNDO APELLIDO: ");
+ strupr(gets(ficha->apellido[1]));
+break;
+ }
+ return ficha;
+}
+int main(int argc,char *argv[])
+{
+ FILE *fichero;
+ struct FICHA ficha;
+ register char d;
+ if (argc!=2)
+ {
+ printf("\nModo de uso: %s <fichero>\n",argv[0]);
+ return 1;
+ }
+ if ((fichero=fopen(argv[1],"a+b"))==NULL)
+ {
+ printf("\nError creando el fichero: %s\n",argv[1]);
+ return 1;
+ }
+ if (setvbuf(fichero,NULL,_IOFBF,
+ TAM_BUFFER*sizeof(struct FICHA))!=0)
+ {
+ printf("\nError creando el buffer para %d elementos.\n",
+ TAM_BUFFER);
+ fclose(fichero);
+ return 1;
+ }
+ do
+ switch(d=Menu())
+ {
+ case '0':break;
+ case '1':if (Insertar(fichero,PedirDatos(&ficha,2))==ERROR)
+ printf("\nNumero de dni duplicado.\n");
+ break;
+ case '2':PedirDatos(&ficha,0);
+ if (BuscarDni(fichero,ficha.dni,1)==ERROR)
+ printf("\nDni no existente.\n");
+ break;
+ case '3':PedirDatos(&ficha,1);
+ if (BuscarApellido(fichero,ficha.apellido[1])==ERROR)
+ printf("\nApellido inexistente.\n");
+ break;
+ }
+ while (d!='0');
+ fclose(fichero);
+ return 0;
+}
+
