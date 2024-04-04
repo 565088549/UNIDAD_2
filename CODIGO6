@@ -1,0 +1,27 @@
+#include <stdio.h>
+#include <string.h>
+#define TAM 100
+/* Rutina que calcula si una palabra es palindroma.
+Parametros: char *cadena Puntero al string con la palabra.
+Return: int 0 no palindroma, <>0 palindroma. */
+int Palindroma(char *cadena)
+{
+ register int i,j;
+ i=0;
+ j=strlen(cadena)-1;
+ while (i<j && cadena[i]==cadena[j])
+ {
+ i++;
+ j--;
+ }
+ return (i>=j);
+}
+int main(void)
+{
+ char cadena[TAM];
+ printf("\nIntroduce la palabra\n");
+ gets(cadena);
+ printf("La palabra: %s %s palindroma.\n",cadena,
+ (Palindroma(cadena)) ? "es" : "no es");
+ return 0;
+}
