@@ -1,0 +1,10 @@
+#include <stdio.h>
+#include <stdlib.h>
+// Ejemplo aprenderaprogramar.com
+int main() {
+    printf("%c \n",65);
+    printf("%cbeto \n",65);
+    printf("%c \n",97);
+    printf("%cbeto \n",97);
+    return 0;
+}
