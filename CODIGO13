@@ -1,0 +1,11 @@
+
+#include <stdio.h>
+#include <stdlib.h>
+// Ejemplo aprenderaprogramar.com
+int main() {
+    printf ("Saltos de linea. El presidente dijo hola \n\n");
+    printf ("\tTabulador. El presidente dijo hola \n\n");
+    printf ("Barra invertida. El presidente dijo \\hola\\\n\n");
+    printf ("Comillas. El presidente dijo: \"hola\"\n\n");
+    return 0;
+}
