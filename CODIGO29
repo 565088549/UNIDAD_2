@@ -1,0 +1,6 @@
+#ifndef _INFO_PILA_H
+#define _INFO_PILA_H
+/* Definición del tipo de dato a almacenar en la pila */
+typedef char TIPO_INFO_PILA;
+/* fin del archivo infopila.h */
+#endif
