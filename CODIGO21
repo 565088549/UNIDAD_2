@@ -1,0 +1,82 @@
+#include <stdio.h>
+#include <string.h>
+#define ERR -1
+#define OK 1
+#define MAX_DIM 80 /* Maxima longitud de la linea */
+#define mayor(a,b)((a) > (b) ? (a):(b))
+char *fgets(char *linea, int max, FILE * fp);
+int mayor_linea(void);
+int leer_archivo(char *archivo[]);
+void ayuda(void);
+FILE * fp;
+int max = MAX_DIM;
+int main(int argc, char *argv[])
+{
+ /* Debe introducir <nombre del ejecutable> <nombre del archivo> */
+ if (argc != 2)
+ {
+ ayuda();
+ return ERR;
+ }
+ if (leer_archivo(&argv[1]) == ERR)
+ return ERR;
+
+ printf("\nLa linea mas larga tiene %d caracteres.\n", mayor_linea());
+ fclose(fp);
+ return OK;
+}
+/*****************************************************************************
+*
+* Funcion: int leer_archivo(char *archivo[])
+*
+* IN: Nombre del archivo
+* OUT: OK si se ha leido correctamente, ERR si ha habido algun fallo
+* MAKE: Lee un archivo introducido por el usuario.
+*
+*****************************************************************************/
+int leer_archivo(char *archivo[])
+{
+
+ if ((fp = fopen(archivo[0], "r")) == NULL)
+ {
+ printf("Error al intentar abrir el archivo\n");
+ return ERR;
+ }
+ return OK;
+}
+/*****************************************************************************
+*
+* Funcion: int mayor_linea(void)
+*
+* IN: 
+* OUT: Tamagno de la linea de mayor longitud del archivo.
+* MAKE: Calcula el tamagno de la linea mas larga.
+*
+*****************************************************************************/
+int mayor_linea(void)
+{
+
+ char cad[MAX_DIM];
+ int mayor_cad = 0; /* Inicializamos el valor de la cadena */
+ while (!feof(fp))
+ {
+ fgets(cad, MAX_DIM, fp);
+ mayor_cad = mayor(mayor_cad, (int) strlen(cad));
+ }
+
+ return mayor_cad;
+}
+/*****************************************************************************
+*
+* Funcion: void ayuda(void)
+*
+* IN:
+* OUT: Mensaje de ayuda para el usuario.
+* MAKE: Muestra ayuda al usuario para que introduzca los datos
+correctamente.
+*
+*****************************************************************************/
+void ayuda(void)
+{
+ printf("\nDebe introducir:<nombre del ejecutable> <nombre del archivo>\n");
+}
