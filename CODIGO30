@@ -1,0 +1,4 @@
+#ifndef ALGORIT_H
+#define ALGORIT_H
+ESTADO Algoritmo(int argc, char *argv[]);
+#endif
