@@ -1,0 +1,202 @@
+#include <stdio.h>
+#include <alloc.h>
+#include <stdlib.h>
+#include <string.h>
+#define MAX_LONG_NIF 10 /* Longitud maxima del NIF */
+#define MAXLEN 80 /* Longitud maxima de las cadenas que leemos */
+typedef struct
+ {
+ char *nombre;
+ char *apellido;
+ char nif[MAX_LONG_NIF];
+ int edad;
+ } PERSONA;
+PERSONA persona, *pPersona=NULL;
+typedef enum { OK = 1, ERR = 0} status;
+status LeerDatos(PERSONA *pp);
+void MostrarDatos(PERSONA *);
+status EsDigito(char *caracter);
+status CadenaVacia(char caracter[]);
+int PasaAEntero(char caracter[], int maximo);
+status LiberarPersona(PERSONA *);
+int main(void)
+{
+ pPersona = &persona;
+ if (LeerDatos(pPersona) == ERR)
+ {
+ LiberarPersona(pPersona);
+ return ERR;
+ }
+ MostrarDatos(pPersona);
+ LiberarPersona(pPersona);
+ return OK;
+}
+/*****************************************************************************
+*
+* Funcion: status LeerDatos(PERSONA *pp)
+*
+* IN: Puntero a una estructura de tipo PERSONA. Variable: *pp
+* OUT: OK si se leen los datos correctamente, ERR si hay algun fallo
+* MAKE: Pide los datos de la persona al usuario y lo guarda en la estructura
+*
+*****************************************************************************/
+status LeerDatos(PERSONA *pp)
+{
+ #define LONG_NIF 8 /* Numero de digitos que debe tener el NIF */
+ #define LONG_CADENA 60
+ char temp[MAXLEN];
+ int i;
+ printf("Introduzca los datos de la persona:\n");
+ printf("\nNombre: ");
+ gets(temp);
+ pp->nombre = (char *) malloc((strlen(temp) + 1) * sizeof(char));
+ if (CadenaVacia(temp) == OK)
+ return ERR;
+ else if (strlen(temp) > LONG_CADENA)
+ {
+ printf("La longitud de la cadena es demasiado larga");
+ return ERR;
+ }
+ else
+ strcpy(pp->nombre, temp);
+ fflush(stdout);
+ printf("Apellido: ");
+ gets(temp);
+ pp->apellido = (char *) malloc((strlen(temp) + 1) * sizeof(char));
+ if (CadenaVacia(temp) == OK)
+ return ERR;
+ else
+ strcpy(pp->apellido, temp); 
+for (i=0; i<strlen(pp->apellido); i++)
+ {
+ if (pp->apellido[i] == ' ')
+ {
+ printf("Introduzca un apellido unicamente y no deje espacios.");
+ return ERR;
+ }
+ }
+ printf("NIF (8 digitos, comience con 0 si es necesario): ");
+ gets(temp);
+ if (strlen(temp) != LONG_NIF)
+ {
+ printf("El NIF debe tener 8 digitos.\n");
+ return ERR;
+ }
+ if (EsDigito(temp) == OK)
+ {
+ for (i=0; i<strlen(temp); i++)
+ pp->nif[i] = temp[i];
+ }
+ else
+ return ERR;
+ printf("Edad: ");
+ gets(temp);
+ if (EsDigito(temp) == ERR)
+ return ERR;
+ pp->edad=PasaAEntero(temp, 2);
+ if (pp->edad == ERR)
+ {
+ printf("\nError al intentar leer la edad.");
+ printf("\nLa edad debe estar entre 1 y 99.\n");
+ return ERR;
+ }
+ return OK;
+}
+/*****************************************************************************
+*
+* Funcion: void MostrarDatos(PERSONA *pp)
+*
+* IN: Puntero a una estructura de tipo PERSONA
+* OUT:
+* MAKE: Muestra los datos de la estructura por pantalla
+*
+*****************************************************************************/
+void MostrarDatos(PERSONA *pp)
+{
+ printf("\nLos datos obtenidos son:\n");
+ printf("\nNombre: %s", pp->nombre);
+ printf("\nApellido: %s", pp->apellido);
+ printf("\nNIF: %s", pp->nif);
+ printf("\nEdad: %d", pp->edad);
+}
+/*********************************************************
+* Funcion: int EsDigito(char *caracter)
+*
+* IN: Se le da una serie de caracteres para que se compruebe si es un numero
+* OUT: Nos devolvera ERR si se produce algun fallo, OK si ha ido todo bien
+* MAKE: Comprueba la integridad de los datos
+*
+**********************************************************/
+status EsDigito(char *caracter)
+{
+ int i;
+ CadenaVacia(caracter);
+ for (i = 0; i < (int) strlen(caracter); i++)
+ if (caracter[i] < '0' || caracter[i] > '9')
+ {
+ printf("\nIntroduzca unicamente digitos, por favor.\n");
+ return ERR;
+ }
+ return OK;
+}
+/*****************************************************************************
+*
+* Funcion: status CadenaVacia(char caracter[])
+*
+* IN: Una cadena de caracteres
+* OUT: ERR si la cadena no esta vacia, OK si la cadena esta vacia
+* MAKE: Comprueba si una cadena esta o no vacia
+*
+*****************************************************************************/
+status CadenaVacia(char caracter[])
+{
+ if (caracter[0] == 0)
+ {
+ printf("\nNo puede dejarlo en blanco, debe introducir los datos\n");
+ return OK;
+ }
+ return ERR;
+}
+/*****************************************************************************
+*
+* Funcion: int PasaAEntero(char caracter[], int maximo)
+*
+* IN: cadena de caracteres que tenemos que pasar a entero y maximo de
+* digitos permitidos.
+* OUT: El numero pasado a entero o ERR si hay algun fallo
+* MAKE: Pasa una cadena de caracteres a entero
+*
+*****************************************************************************/
+int PasaAEntero(char caracter[], int maximo)
+{
+ int num=0;
+ int i;
+ if (strlen(caracter) > maximo)
+ {
+ printf("\nDato erroneo.");
+ return ERR;
+ }
+ /* Si solo se ha introducido un caracter */
+ if (strlen(caracter) == 1)
+ return num = caracter[0] - '0'; /* Devolvemos el digito */
+ /* Si hay mas de un caracter */
+ for (i = 0; i != (int) strlen(caracter); i++)
+num = (num * 10) + (caracter[i] - '0'); /* Lo devolvemos pasado a numero
+*/
+ return num;
+}
+/*****************************************************************************
+*
+* Funcion: status LiberarPersona(PERSONA *pp)
+*
+* IN: Puntero a una estructura de tipo PERSONA
+* OUT: OK
+* MAKE: Libera la memoria que habiamos reservado previamente
+*
+*****************************************************************************/
+status LiberarPersona(PERSONA *pp)
+{
+ free(pp->nombre);
+ free(pp->apellido);
+ return OK;
+} 
