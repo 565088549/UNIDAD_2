@@ -1,0 +1,192 @@
+#include <stdio.h>
+#include <alloc.h>
+#include <stdlib.h>
+#include <string.h>
+#define OK 1
+#define ERR -10001
+#define NO 0
+#define MAX_DIM 9999
+int creartabla(int **ptabla, int *numero);
+int rellenartabla(int *tabla, int numero);
+int controldeerrores(int numero);
+int calcular(int *tabla, int numero, int *max, int *min);
+int mostrarvalores(int *tabla, int numero, int max, int min);
+int es_digito(char caracter[]);
+int *tabla = NULL;
+int numero, max, min;
+int main(void)
+{
+ if (creartabla(&tabla, &numero) == ERR)
+ return ERR;
+ if (rellenartabla(tabla, numero) == ERR)
+ return ERR;
+ calcular(tabla, numero, &max, &min);
+ mostrarvalores(tabla, numero, max, min);
+return OK;
+}
+/*****************************************************************************
+*
+* Funcion: int creartabla(int **ptabla, int *numero)
+*
+* IN: la direccion de un puntero y la direccion del numero de elementos a
+* guardar
+* OUT: OK si se consigue, ERR si se falla
+* MAKE: Crea una tabla dinamica de enteros en donde se guardaran los numeros
+* introducidos
+*
+*****************************************************************************/
+int creartabla(int **ptabla, int *numero)
+{
+ int continuar;
+ char elementos[MAX_DIM];
+ do {
+ continuar = OK;
+ printf("Por favor introduzca el numero de elementos: ");
+ gets(elementos);
+ /* Si esta vacio, es negativo o 0... */
+ if (elementos[0] == 0 || elementos[0] == '-' || elementos[0] == '0')
+ continuar = ERR;
+ if ((*numero = es_digito(elementos)) == ERR)
+ continuar = ERR;
+ } while (continuar != OK);
+
+ *ptabla = (int *) malloc(*numero * sizeof(int));
+
+ if (*ptabla == NULL)
+ return ERR;
+
+ return OK;
+}
+/*****************************************************************************
+*
+* Funcion: int rellenartabla(int *tabla, int numero)
+*
+* IN: la direccion de la tabla, el numero de enteros a guardar
+* OUT: OK si se consigue ERR si se falla
+* MAKE: rellena la tabla con los numero que introduzca el usuario
+*
+*****************************************************************************/
+int rellenartabla(int *tabla, int numero)
+{ 
+int i, continuar;
+ char num[MAX_DIM];
+ printf("Por favor introduzca los numeros: \n");
+ for (i = 0; i < numero; ++i)
+ {
+ continuar = OK;
+ gets(num);
+ if (num[0] == 0)
+ {
+ printf("Deberia introducir algun digito.\n");
+ continuar = ERR;
+ }
+ if ((*tabla++ = es_digito(num)) == ERR)
+ {
+ printf("Error al leer el numero.\n");
+ continuar = ERR;
+ }
+ if (continuar == ERR)
+ i--;
+ }
+return OK;
+}
+/*****************************************************************************
+*
+* Funcion: int calcular(int *tabla, int numero, int *max, int *min)
+*
+* IN: La direccion de la tabla, el numero de elementos, y la direccion del
+* numero mas grande y mas pequeño
+* OUT: OK si se consigue ERR si falla
+* MAKE: calcula el numero mas grande y el mas pequeño
+*
+*****************************************************************************/
+int calcular(int *tabla, int numero, int *max, int *min)
+{
+ int i;
+ *max = *min = tabla[1];
+ for (i = 0; i < numero; i++)
+ {
+ if (tabla[i] > *max)
+ *max = tabla[i];
+ if (tabla[i] < *min)
+ *min = tabla[i];
+ }
+
+return OK;
+}
+/*****************************************************************************
+*
+* Funcion: int mostrarvalores(int *tabla, int numero, int max, int min)
+*
+* IN: La direccion de la tabla y los valores del numero maximo, minimo y
+* numero de enteros
+* OUT: OK si se consigue ERR si falla
+* MAKE: mostrar por pantalla los valores
+*
+*****************************************************************************/
+int mostrarvalores(int *tabla, int numero, int max, int min)
+{
+
+ int i;
+printf("Los valores introducidos han sido:\t");
+
+ for (i = 0; i < numero; i++)
+ printf("%d\t", tabla[i]);
+
+ free(tabla);
+
+ printf("\nEl valor maximo ha sido:\t%d", max);
+ printf("\nEl valor minimo ha sido:\t%d", min);
+ printf("\nEl numero de terminos introducidos ha sido: %d\t\n", numero);
+
+ return OK;
+}
+/*********************************************************
+* Funcion: int es_digito(char caracter)
+*
+* IN: una cadena de caracters
+* OUT: el valor del numero
+* MAKE: nada
+*
+**********************************************************/
+int es_digito(char caracter[])
+{
+
+ int i;
+ int num = 0;
+ int rango;
+ if (caracter[0] == '-') /* Si se ha introducido un numero negativo */
+ {
+ i = 1;
+/* Empezamos el bucle para ver si es caracter desde el siguiente caracter */
+ rango = 5;
+ }
+ else /* Debe un numero positivo o hay algun error */
+ {
+ i = 0;
+ rango = 4;
+ }
+
+ /* Comprobamos que todos los elementos sean digitos */
+ if ((int) strlen(caracter) > rango)
+/* El mayor numero que permitimos es 9999 */
+ {
+ printf("No puede introducir esa cantidad de numeros!!!\n");
+ printf("Es demasiado grande. Introduzca numeros entre -9999 y 9999\n");
+ return ERR;
+ }
+ for (i = i; i < (int) strlen(caracter); i++)
+ if (caracter[i] < '0' || caracter[i] > '9')
+ {
+ printf("\nIntroduzca unicamente digitos, por favor.\n");
+ return ERR;
+ }
+ /* Si solo se ha introducido un caracter */
+ if (strlen(caracter) == 1)
+ return num = caracter[0] - '0'; /* Devolvemos el digito */
+
+ /* Si hay mas de un caracter */
+ for (i = 0; i != (int) strlen(caracter); i++)
+ num = (num * 10) + (caracter[i] - '0');
+return num;
+}
