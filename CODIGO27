@@ -1,0 +1,377 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+#include <conio.h>
+#include <time.h>
+#define MAX_LONG_NIF 10
+#define MAX_LEN 256
+#define MAX_PERS 200
+struct person
+ {
+ char *nombre;
+ char *apellido;
+ char nif[MAX_LONG_NIF];
+ int edad;
+ struct person *amigo;
+ };
+typedef struct person PERSONA;
+PERSONA persona[MAX_PERS], *pPersona;
+int top; 
+typedef enum { OK = 1, ERR = 0} status;
+void ayuda(void);
+status LeerArchivo(char *archivo[], PERSONA *pp, int *pTop);
+status AsignarAmigos(PERSONA *pp, int *top);
+status ControlErrores(char *pNombre, char *pApellido, char *pNif, char
+ *pEdad);
+status CadenaVacia(char *caracter);
+status EsDigito(char *caracter, int longitud);
+int PasaAEntero(char *caracter, int maximo, PERSONA *pDatos);
+void MostrarPersona(PERSONA *pp, int *linea);
+void MostrarAmigo(PERSONA *pp, int *linea);
+status AsesinarPersonas(PERSONA *pp, int *top);
+status LiberarPersona(PERSONA *);
+int main(int argc, char *argv[])
+{
+ int top = 0; /* Numero de personas en el archivo */
+ int line1 = 1;
+ int line2 = 2;
+ int i;
+ clrscr();
+ pPersona = persona;
+ /* Se debe introducir: <nombre del ejecutable> <nombre del archivo> */
+ if (argc != 2)
+ {
+ ayuda(); /* Mensaje de ayuda para el usuario */
+ return ERR;
+ }
+ if (LeerArchivo(&argv[1], pPersona, &top) == ERR)
+ {
+ printf("\nRevise el fichero, se produjo un fallo al intentar leerle.\n");
+ return ERR;
+ }
+ if (AsignarAmigos(persona, &top) != OK)
+ return ERR;
+ pPersona = &persona[top/2];
+ if (AsesinarPersonas(pPersona, &top) == ERR)
+ {
+ printf("\nError al asesinar a las personas.");
+ return ERR;
+ }
+ printf("\n\nLa mitad de las personas han sido liberadas, pulse para
+ continuar.\n");
+ getch();
+ clrscr();
+ for (i=0; i<top; i++)
+ {
+ pPersona = &persona[i];
+ MostrarPersona(pPersona, &line1);
+ MostrarAmigo(pPersona, &line2);
+ }
+ return OK;
+}
+/*****************************************************************************
+*
+* Funcion: void ayuda()
+* 
+* IN:
+* OUT: Mensaje de ayuda para el usuario.
+* MAKE: Muestra ayuda para que se introduzcna los datos correctamente.
+*
+*****************************************************************************/
+void ayuda()
+{
+ printf("Uso: <nombre del ejecutable> <nombre del archivo de texto>\n");
+}
+/*****************************************************************************
+*
+* Funcion: int LeerArchivo(char *archivo[], PERSONA *pp, int *pTop)
+*
+* IN: Nombre del archivo, puntero a una estructura de tipo PERSONA y numero
+* de personas que hay.
+* OUT: OK si se ha leido correctamente, ERR si ha habido algun fallo.
+* MAKE: Lee un archivo introducido por el usuario y guarda los datos en una
+* estructura de tipo PERSONA.
+*
+*****************************************************************************/
+status LeerArchivo(char *archivo[], PERSONA *pp, int *pTop)
+{
+ FILE *fp;
+ int inicio=0; /* Posicion en el array de estructuras */
+ int linea = 1; /* Nos va a servir para movernos por la pantalla */
+ char cad[MAX_LEN];
+ char nombre[MAX_LEN];
+ char apellido[MAX_LEN];
+ char nif[MAX_LEN];
+ char edad[MAX_LEN];
+ if (!(fp = fopen(archivo[0], "r")))
+ {
+ printf("\nError al intentar abrir el archivo\n");
+ return ERR;
+ }
+ while (!feof(fp))
+ {
+ if (*pTop == MAX_PERS)
+ /* Si se va a superar la dimension de la tabla definida*/
+ {
+ printf("\n\nSe sobrepaso el limite de PERSONAS.\n");
+ return ERR;
+ }
+ pp=&persona[inicio];
+ fgets(cad, MAX_LEN, fp);
+ if (cad[0]=='\n')
+ {
+ printf("\n\nNo puede dejar lineas en blanco.");
+ return ERR;
+ }
+ sscanf(cad, "%s %s %s %s", nombre, apellido, nif, edad);
+ if(ControlErrores(nombre, apellido, nif, edad) == ERR)
+ {
+ printf("\nHa ocurrido un error al leer los datos.\n");
+ return ERR;
+ }
+ /* Reservamos memoria y asignamos los valores */
+ pp->nombre = (char *) malloc((strlen(nombre) + 1) * sizeof(char));
+ strcpy(pp->nombre, nombre);
+pp->apellido = (char *) malloc((strlen(apellido) + 1) * sizeof(char));
+ strcpy(pp->apellido, apellido);
+ strcpy(pp->nif, nif);
+ if (!feof(fp)) /* Si no hemos llegado al final del archivo... */
+ {
+ pp->edad = PasaAEntero(edad, 2, pp);
+ if (pp->edad == ERR)
+ return ERR;
+ MostrarPersona(pp, &linea);
+ /* Pasaremos a la siguiente estructura de tipo PERSONA */
+ inicio++;
+ (*pTop)++;
+ }
+ }
+ fclose(fp);
+ return OK;
+}
+/*****************************************************************************
+*
+* Funcion: status AsignarAmigos(PERSONA *pp, int *top)
+*
+* IN: Puntero a una estructura y el numero de personas.
+* OUT: OK
+* MAKE: Asigna una estructura llamada "amigo" a cada persona.
+*
+*****************************************************************************/
+status AsignarAmigos(PERSONA *pp, int *top)
+{
+ int i;
+ int aleat; /* Numero aleatorio */
+ int linea = 2;
+ srand((unsigned int) time((time_t *)NULL));
+ for (i = 0; i != *top; i++)
+ {
+ aleat = rand() % (*top);
+ pp=&persona[i];
+ if (i != aleat) /* Una persona no puede ser su propio amigo*/
+ {
+ pp->amigo = &persona[aleat];
+ MostrarAmigo(pp, &linea);
+ }
+ else
+ i--;
+ }
+ return OK;
+}
+/*****************************************************************************
+*
+* Funcion: status ControlErrores(char *pNombre, char *pApellido, char *pNif,
+* char *pEdad)
+*
+* IN: Nombre, apellido, NIF y edad de la persona que hemos leido.
+* OUT: OK si los datos no contienen fallos, ERR si se han encontrado
+* errores.
+* MAKE: Chequea que los datos leidos no contengan errores.
+*
+*****************************************************************************/
+status ControlErrores(char *pNombre, char *pApellido, char *pNif, char *pEdad)
+{
+ #define LONG_NIF 8
+ /* Unico valor permitido para el numero de digitos del NIF */
+#define MAX_LONG_DATOS 17 /* Longitud maxima del nombre y del apellido */
+ int i;
+ if (strlen(pNombre) > MAX_LONG_DATOS)
+ {
+ printf("\n\nLa longitud del nombre que se estaba leyendo es demasidado
+ grande.");
+ return ERR;
+ }
+ if (strlen(pApellido) > MAX_LONG_DATOS)
+ {
+ printf("\n\nLa longitud del apellido que se estaba leyendo es demasidado
+ grande.");
+ return ERR;
+ }
+ if (strlen(pNif) != LONG_NIF)
+ {
+ printf("\n\nEl NIF debe tener 8 digitos.");
+ return ERR;
+ }
+ if(EsDigito(pNif, (int) strlen(pNif)) == ERR)
+ {
+ printf("\n\nError al leer el NIF de %s %s.", pNombre, pApellido);
+ return ERR;
+ }
+ if (*pEdad == '0')
+ {
+ printf("\n\nSe ha leido una edad incorrecta. No puede tener 0 años.");
+ return ERR;
+ }
+ for (i=0; i<strlen(pEdad); i++)
+ {
+ if (!isdigit(pEdad[i]))
+ {
+ printf("\n\nSe realizo una operacion no valida mientras se leia el
+ archivo.\n");
+ return ERR;
+ }
+ }
+ return OK;
+}
+/*****************************************************************************
+*
+* Funcion: int CadenaVacia(char *caracter)
+*
+* IN: Una cadena de caracteres.
+* OUT: OK si la cadena esta vacia, ERR si la cadena contiene algun elemento.
+* MAKE: Chequea si la cadena introducida esta vacia.
+*
+*****************************************************************************/
+status CadenaVacia(char *caracter)
+{
+ if (caracter[0] == 0)
+ {
+ printf("\nNo puede dejarlo en blanco, debe introducir los datos");
+ return OK;
+ }
+ return ERR;
+}
+/*********************************************************
+* Funcion: status EsDigito(char *caracter, int longitud)
+*
+* IN: Se le da una serie de caracteres para que se compruebe si es un
+* numero.
+* OUT: Nos devolvera ERR si se produce algun fallo, OK si es correcto.
+* MAKE: Comprueba la integridad de los datos.
+*
+**********************************************************/
+status EsDigito(char *caracter, int longitud)
+{
+ int i=0;
+ if (CadenaVacia(caracter) == OK)
+ return ERR;
+ /* Comprobamos que todos los elementos sean digitos */
+ for (i = i; i < longitud; i++)
+ if (caracter[i] < '0' || caracter[i] > '9')
+ {
+ printf("\n\nIntroduzca unicamente digitos, por favor.");
+ return ERR;
+ }
+ return OK;
+}
+/*****************************************************************************
+*
+* Funcion: int PasaAEntero(char *caracter, int maximo, PERSONA *pDatos)
+*
+* IN: Una cadena de caracteres, el maximo de digitos permitidos y un puntero
+* a una estructura de tipo PERSONA.
+* OUT: El numero convertido a entero o ERR si hay algun fallo.
+* MAKE: Pasa una cadena de caracteres a entero.
+*
+*****************************************************************************/
+int PasaAEntero(char *caracter, int maximo, PERSONA *pDatos)
+{
+ int num=0;
+ int i;
+ if (strlen(caracter) > maximo)
+ {
+ printf("\n\n%s %s es muy mayor!!!", pDatos->nombre, pDatos->apellido);
+ return ERR;
+ }
+ /* Si solo se ha introducido un caracter */
+ if (strlen(caracter) == 1)
+ return num = caracter[0] - '0'; /*Devolvemos el digito */
+ /* Si hay mas de un caracter */
+ for (i = 0; i != (int) strlen(caracter); i++)
+ num = (num * 10) + (caracter[i] - '0');
+ return num;
+}
+/*****************************************************************************
+*
+* Funcion: void MostrarDatos(PERSONA *pp, int *linea)
+*
+* IN: Un puntero a una estructura y la linea donde escribiremos en pantalla.
+* OUT:
+* MAKE: Muestra por pantalla los datos de la estructura.
+*
+*****************************************************************************/
+void MostrarPersona(PERSONA *pp, int *linea)
+{
+ gotoxy( 3, *linea); printf("USUARIO: %s", pp->nombre);
+ gotoxy(32, *linea); printf("%s", pp->apellido);
+ gotoxy(52, *linea); printf("NIF: %s", pp->nif);
+ gotoxy(70, *linea); printf("EDAD: %d", pp->edad);
+ *linea += 2;
+}
+/*****************************************************************************
+*
+* Funcion: void MostrarAmigo(PERSONA *pp, int *linea)
+*
+* IN: Puntero a una estructura de tipo PERSONA y la linea en la que vamos
+* a escribir en la pantalla.
+* OUT:
+* MAKE: Muestra por pantalla los datos del amigo.
+*
+*****************************************************************************/
+void MostrarAmigo(PERSONA *pp, int *linea)
+{
+ gotoxy( 3, *linea); printf("AMIGO: %s", pp->amigo->nombre);
+ gotoxy(32, *linea); printf("%s", pp->amigo->apellido);
+ *linea += 2;
+}
+/*****************************************************************************
+*
+* Funcion: int LiberarPersona(PERSONA *pp)
+*
+* IN: Puntero a la estructura.
+* OUT: OK si todo es correcto, ERR si ha ocurrido algun error.
+* MAKE: Libera el nombre y apellido de la estructura introducida.
+*
+*****************************************************************************/
+status LiberarPersona(PERSONA *pp)
+{
+ if(!pp->nombre || !pp->apellido) /* Si alguno es un puntero nulo */
+ {
+ printf("\n\nError al liberar el puntero");
+ return ERR;
+ }
+ else
+ {
+ free(pp->nombre);
+ free(pp->apellido);
+ }
+ return OK;
+}
+/*****************************************************************************
+*
+* Funcion: status AsesinarPersonas(PERSONA *pp, int *top)
+*
+* IN: Puntero a una estructura y el numero de personas.
+* OUT: OK
+* MAKE: Libera las personas que estan desde la mitad hasta el final.
+*
+*****************************************************************************/
+status AsesinarPersonas(PERSONA *pp, int *top)
+{
+ int i; 
+for (i = (*top/2); i < *top; i++)
+ LiberarPersona(pp++);
+ *top=((int)*top)/2;
+ return OK;
+}
